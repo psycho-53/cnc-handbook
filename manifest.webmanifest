@@ -1,0 +1,19 @@
+{
+  "name": "CNC Handbook — справочник фрезеровщика",
+  "short_name": "CNC Handbook",
+  "description": "Режимы резания, технология, типовые проблемы, стойки ЧПУ",
+  "start_url": "./index.html#/home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#101b2c",
+  "lang": "ru",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
