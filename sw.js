@@ -1,5 +1,5 @@
 /* CNC Handbook: offline cache of reference material and calculators. */
-const CACHE = 'cnc-handbook-v0.5.1';
+const CACHE = 'cnc-handbook-v0.5.2';
 const ASSETS = ['./','./index.html','./styles.css','./data.js','./manuals.js','./knowledge.js','./process-core.js','./process-holes.js','./process-cutting.js','./process-diagnostics.js','./deep-dive.js','./process-figures.js','./app.js','./manifest.webmanifest','./favicon.svg'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith('cnc-handbook-')&&key!==CACHE).map(key=>caches.delete(key)))));self.clients.claim();});
