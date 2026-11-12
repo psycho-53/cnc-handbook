@@ -38,7 +38,7 @@ const byId = id => DB.articles.find(a=>a.id===id);
 const byCat = id => DB.categories.find(c=>c.id===id);
 let saved;
 try {saved = new Set(JSON.parse(localStorage.getItem('cnc-handbook-saved')||'[]').filter(x=>typeof x==='string'));} catch(e){saved=new Set()}
-const state = {saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', mode:'milling', expanded:new Set(), calc:{
+const state = {saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, mode:'milling', expanded:new Set(), calc:{
  milling:{D:'10',Vc:'160',z:'3',fz:'0,05',ap:'5',ae:'2',L:'100'},
  drilling:{D:'6',Vc:'80',fn:'0,08',L:'40'},
  reverse:{D:'10',n:'4800',z:'4',Vf:'600'},
@@ -49,11 +49,11 @@ const state = {saved, category:'all', query:'', codesQuery:'', codesGroup:'Вс�
  thermal:{L:'200',alpha:'12',delta:'10'}
 }};
 const NAV = [
- ['home','Главная','home'],['calc','Калькулятор','calc'],['library','Справочник','book'],['category/problems','Проблемы','wrench'],['category/technology','Технология','layers'],['guide','Навигатор технолога','book'],['codes','Стойки ЧПУ','monitor'],['category/theory','База знаний','graduation']
+ ['home','Главная','home'],['calc','Калькулятор','calc'],['library','Справочник','book'],['category/problems','Проблемы','wrench'],['category/technology','Технология','layers'],['guide','Навигатор технолога','book'],['codes','Стойки ЧПУ','monitor'],['siemens-words','Слова SINUMERIK','book'],['category/theory','База знаний','graduation']
 ];
 function route(){try{let r=decodeURIComponent((location.hash||'#/home').replace(/^#\/?/,'').split('?')[0]);return r||'home'}catch(_){return 'missing'}}
 function activeNav(key,r){return key==='library' ? (r==='library'||r.startsWith('article/')||r.startsWith('category/') ) : key===r}
-function pageName(r){if(r==='home')return'Главная';if(r==='calc')return'Калькулятор режимов';if(r==='library')return'Библиотека';if(r==='guide')return'Навигатор технолога';if(r==='codes')return'Стойки ЧПУ';if(r==='saved')return'Избранное';if(r==='sources')return'Источники';if(r.startsWith('category/'))return byCat(r.split('/')[1])?.title||'Раздел';if(r.startsWith('article/'))return byId(r.split('/')[1])?.title||'Статья';return'Справочник'}
+function pageName(r){if(r==='home')return'Главная';if(r==='calc')return'Калькулятор режимов';if(r==='library')return'Библиотека';if(r==='guide')return'Навигатор технолога';if(r==='codes')return'Стойки ЧПУ';if(r==='siemens-words')return'Слова SINUMERIK';if(r==='saved')return'Избранное';if(r==='sources')return'Источники';if(r.startsWith('category/'))return byCat(r.split('/')[1])?.title||'Раздел';if(r.startsWith('article/'))return byId(r.split('/')[1])?.title||'Статья';return'Справочник'}
 function sidebar(r){return `<aside class="sidebar">
  <a class="brand" href="#/home"><div class="brand-emblem">CNC</div><div><span class="brand-title">Handbook</span><span class="brand-sub">Фрезерная обработка</span></div></a>
  <div class="side-label">Навигация</div>
@@ -74,7 +74,7 @@ function articleGrid(arr){return arr.length?`<div class="article-grid">${arr.map
 function empty(title,desc){return `<div class="empty">${ic('search')}<h3>${safe(title)}</h3><p>${safe(desc)}</p></div>`}
 function callout(text,warn=false){return `<div class="callout ${warn?'alert':''}">${ic(warn?'warning':'info')}<div>${text}</div></div>`}
 function heroMark(){return `<svg viewBox="0 0 260 240" aria-hidden="true"><defs><linearGradient id="steel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#7bafed" stop-opacity=".7"/><stop offset="1" stop-color="#236fbc" stop-opacity=".2"/></linearGradient></defs><path d="M35 155 122 203l103-50-93-47z" fill="none" stroke="#79b8fa" stroke-width="2"/><path d="M35 155V96l90-48 100 45v60" fill="none" stroke="#4383c0" stroke-width="1.8"/><path d="M125 48v57M225 93l-100 56-90-53" stroke="#5ba2e6" fill="none" stroke-width="1.6"/><path d="m70 125 53-28 61 30-53 27z" fill="url(#steel)" stroke="#7ebcf2"/><path d="m70 125v22l61 30v-23m53-27v20l-53 30" fill="none" stroke="#7ebcf2"/><path d="M105 67v52m-8-51h16M97 58h16l5 9H92z" stroke="#b8d8f9" stroke-width="2" fill="#2a6baf"/><path d="m105 119 4 4-4 4-4-4z" fill="#5ecbd3"/><path d="M105 26v20m-4-5 4 5 4-5M105 120h-25" stroke="#77c8ff" stroke-dasharray="4 5"/><path d="M35 155 10 170M35 155v-28" stroke="#72b8ec" stroke-width="1.4"/><path d="m10 170 9-1-4-7" stroke="#72b8ec" fill="none"/><path d="M225 153h18" stroke="#72b8ec" stroke-width="1.5"/><circle cx="125" cy="149" r="3" fill="#8dddfa"/></svg>`}
-function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v0.6.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
+function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v0.7.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
  <div class="mt-3 stats"><span>${DB.articles.length} проверяемых тем</span><span class="dot"></span><span>3 группы стоек</span><span class="dot"></span><span>Без ИИ</span></div>
  <section class="mt-5"><div class="section-heading"><div><h2>Рабочие разделы</h2><p class="small muted mb-0">Нужная информация — в два касания</p></div></div><div class="feature-grid">
  ${feature('calc','Калькуляторы','Обороты, подача, съём, время','calc')}
@@ -82,6 +82,7 @@ function home(){let priority=['drawing-tech','rough-finish-sequence','corner-ove
  ${feature('category/problems','Типовые проблемы','Вибрации, сколы, размер','wrench')}
  ${feature('category/technology','Технология','Базы, установы, стратегии','layers')}
  ${feature('codes','Стойки ЧПУ','Редкие G-коды и режимы','monitor')}
+ ${feature('siemens-words','Язык SINUMERIK','SUPA, ROT, TRANS и 130+ слов','book')}
  ${feature('category/theory','База знаний','Причины и физика процессов','graduation')}
  ${feature('guide','Маршруты технолога','Подборки тем по реальным задачам','layers')}
  </div></section>
@@ -132,12 +133,52 @@ function codesRows(){
 function codesPage(){
  const c=DB.codes[state.control], groups=c.groups||['Все'];
  return `${header('Продвинутые функции стоек','Редкие и полезные команды, преобразования, режимы и циклы. Без очевидных G0/G1/G2.','SIEMENS · FANUC · HAAS')}
+ <div class="mt-3 mb-4"><a class="btn btn-primary" href="#/siemens-words">${ic('book')} Словарь SINUMERIK — 130+ программных слов</a></div>
  <div class="controller-tabs">${Object.entries(DB.codes).map(([id,ctl])=>`<button class="btn ${state.control===id?'btn-primary':''}" data-action="control" data-control="${id}" aria-pressed="${state.control===id}">${safe(ctl.title)}</button>`).join('')}</div>
  <div class="panel mb-4"><div class="eyebrow">Выбрана система</div><h2 class="mt-2 mb-0">${safe(c.title)}</h2><p class="muted small mt-2 mb-0">${safe(c.intro)}</p><p class="small muted mt-3 mb-0">Важно: один и тот же номер G может означать разные функции на Siemens, FANUC и Haas. Поддержка определяется серией, версиями ПО, опциями и настройками изготовителя станка.</p></div>
  <label class="search-box mb-3">${ic('search')}<input id="code-search" type="search" placeholder="G291, SUPA, CYCLE832, G05.1, G187…" value="${safe(state.codesQuery)}" autocomplete="off" aria-label="Поиск расширенной команды"></label>
  <div class="filters advanced-code-filters" aria-label="Разделы расширенных команд">${groups.map(g=>`<button class="chip ${state.codesGroup===g?'active':''}" data-action="code-group" data-group="${safe(g)}" aria-pressed="${state.codesGroup===g}">${safe(g)}</button>`).join('')}</div>
  <div id="code-results" aria-live="polite">${codesRows()}</div>
  <section class="mt-5"><div class="section-heading"><h2>Теория рядом с командами</h2></div><div class="related-links"><a href="#/article/gcode-state">Модальные состояния</a><a href="#/article/path-tolerance">Точный останов и LookAhead</a><a href="#/article/fourth-axis-index">Индексная 4-я ось</a><a href="#/article/tool-offsets">Коррекции инструмента</a><a href="#/article/cam-review">Проверка после постпроцессора</a></div></section>`;}
+function siwordFilter(){
+ const words=normalizeSearch(state.siwordQuery).split(' ').filter(Boolean);
+ return (DB.siWords||[]).filter(w=>
+  (state.siwordGroup==='Все группы'||w.group===state.siwordGroup)&&
+  (state.siwordDoc==='all'||w.doc===state.siwordDoc)&&
+  words.every(term=>normalizeSearch([w.word,w.group,w.summary,w.detail,w.practical,w.caution,w.syntax].join(' ')).includes(term)));
+}
+function siwordResults(){
+ const a=siwordFilter(),shown=a.slice(0,state.siwordLimit);
+ const d=DB.siWordDocs||{};
+ return `<div class="section-heading"><h3>Записи словаря</h3><span class="count">${a.length} из ${DB.siWords.length}</span></div>
+ ${shown.length?`<div class="advanced-code-grid">${shown.map((w,index)=>{
+ const doc=d[w.doc]||{};
+ return `<article class="advanced-code-card">
+ <div class="advanced-code-heading"><div class="advanced-code-sign">${safe(w.word)}</div><span class="advanced-code-type">${safe(w.group)}</span></div>
+ <h3>${safe(w.summary)}</h3>
+ <p class="advanced-code-purpose">${safe(w.detail)}</p>
+ <div class="advanced-code-details"><strong>Для чего полезно</strong><p>${safe(w.practical)}</p></div>
+ <div class="advanced-code-warning"><strong>Что важно знать</strong><p>${safe(w.caution)}</p></div>
+ ${w.syntax?`<div class="advanced-code-example"><strong>Учебный фрагмент синтаксиса, не полноценная программа</strong><pre>${safe(w.syntax)}</pre></div>`:''}
+ <div class="advanced-code-source"><strong>${safe(doc.title||'Руководство Siemens')}</strong> · ${safe(doc.edition||'')} · ${safe(w.page)}
+ ${w.doc==='advanced2006'?'<div class="siword-option-note">Исторический справочник 840D/810D. Поддержка на 828D не подтверждена.</div>':''}</div>
+ </article>`;
+ }).join('')}</div>
+ ${a.length>shown.length?`<div class="mt-4" style="text-align:center"><button type="button" class="btn btn-primary" data-action="siword-more">Показать ещё (${a.length-shown.length})</button></div>`:''}`:empty('Совпадений нет','Попробуй название команды, например SUPA, ROT, POSA, или другую группу.')}`;
+}
+function siemensWordsPage(){
+ const d=DB.siWordDocs||{},arr=DB.siWords||[],groups=['Все группы',...new Set(arr.map(x=>x.group))].sort((a,b)=>a==='Все группы'?-1:b==='Все группы'?1:a.localeCompare(b,'ru'));
+ return `${header('Словарь языка SINUMERIK','SUPA, ROT, STOPRE, POSA, системные переменные и другие слова языка управления — с примерами, ограничениями и страницами руководств.','SIEMENS · ПРОДВИНУТОЕ ПРОГРАММИРОВАНИЕ')}
+ <div class="panel mb-4"><div class="eyebrow">Не только G-коды</div><p class="mb-2">В SINUMERIK есть <strong>операторы, адресные слова, системные переменные и функции</strong>. Например, ROT изменяет программную систему координат, а SUPA подавляет ряд смещений в одном кадре.</p><p class="small muted mb-0">Словарь разделён по источникам. Базовое руководство охватывает 828D/840D sl, а расширенное руководство 2006 года описывает 840D/810D: наличие его функций на конкретной 828D проверяется отдельно. Текст пересказан своими словами.</p></div>
+ <div class="mt-3 mb-4"><a class="btn btn-quiet btn-sm" href="#/codes">${ic('back')} К расширенным G-кодам</a></div>
+ <label class="search-box mb-3">${ic('search')}<input id="siword-search" type="search" value="${safe(state.siwordQuery)}" placeholder="SUPA, ROT, TOFF, TRAORI, IF, параметры..." autocomplete="off" aria-label="Поиск слова SINUMERIK"></label>
+ <div class="siword-filters">
+  <label><span>Назначение</span><select id="siword-group" aria-label="Группа команд">${groups.map(g=>`<option value="${safe(g)}" ${state.siwordGroup===g?'selected':''}>${safe(g)}</option>`).join('')}</select></label>
+  <label><span>Источник / применимость</span><select id="siword-doc" aria-label="Руководство и модель"><option value="all" ${state.siwordDoc==='all'?'selected':''}>Все источники</option><option value="basic2011" ${state.siwordDoc==='basic2011'?'selected':''}>828D / 840D sl · 2011</option><option value="advanced2006" ${state.siwordDoc==='advanced2006'?'selected':''}>840D / 810D · 2006 (проверять)</option></select></label>
+ </div>
+ <div id="siword-results" aria-live="polite">${siwordResults()}</div>
+ <section class="mt-5"><div class="section-heading"><h2>Документация</h2></div><ul class="source-list">${Object.values(d).map(x=>`<li><strong>${safe(x.title)} · ${safe(x.edition)}</strong><p class="small muted">${safe(x.note)}</p></li>`).join('')}</ul></section>
+ `;}
 function sourceItem(s){return `<li>${s.url?`<a href="${safe(s.url)}" target="_blank" rel="noopener noreferrer">${safe(s.name)} ${ic('external','xs')}</a>`:`<strong>${safe(s.name)}</strong>`}${s.details?`<p class="small muted">${safe(s.details)}</p>`:''}</li>`}
 function sourcesPage(){return `${header('Источники и ограничения','Документы производителей, на которых основаны формулы и часть пояснений.','О ПРОЕКТЕ')}
  <div class="panel"><h2>Проверяемые материалы</h2><ul class="source-list">${Object.values(DB.sources).map(s=>sourceItem(s)).join('')}</ul><hr><h3>Границы применимости</h3><p class="small muted">Калькулятор производит арифметический расчёт, а не подбирает инструмент за тебя. Значения Vc, fz, fn, ap и ae следует назначать по материалу, маркировке и геометрии инструмента, жёсткости станка и рекомендациям производителя. Примеры чисел не являются готовыми производственными режимами.</p><p class="small muted">Таблица команд не заменяет руководство системы ЧПУ, инструкции производителя станка, утверждённый техпроцесс и требования охраны труда. Для размеров с допусками нужны актуальные стандарты и официальные таблицы; непроверенные численные поля допусков здесь не приводятся.</p><p class="small muted mb-0">Сайт не отправляет расчёты, сохранённые статьи или запросы поиска на сервер. Данные избранного хранятся локально в этом браузере.</p></div>`}
@@ -203,7 +244,7 @@ function calcPage(){const m=state.mode;let calc=calculator(m,state.calc[m]);retu
  <div class="mt-4">${callout('<strong>Ограничение:</strong> это калькулятор, а не подбор рекомендованных режимов. Проверь максимальные обороты шпинделя и инструмента, подачу станка, материал и жёсткость.',true)}</div>
  <section class="mt-5"><div class="section-heading"><h2>Разобраться в расчётах</h2></div><div class="related-links"><a href="#/article/cutting">Обороты и минутная подача</a><a href="#/article/drilling">Сверление</a><a href="#/article/chip">Толщина стружки</a><a href="#/article/scallop-formula">Гребешок на 3D-поверхности</a><a href="#/article/measurement-temperature">Температура и размер</a><a href="${safe(DB.sources.sandvik.url)}" rel="noopener noreferrer" target="_blank">Источник формул ${ic('external','xs')}</a></div></section>`}
 function render(keepScroll=false){let current=route(),body;
- if(current==='home')body=home();else if(current==='guide')body=guidePage();else if(current==='calc')body=calcPage();else if(current==='library')body=library();else if(current==='codes')body=codesPage();else if(current==='saved')body=savedPage();else if(current==='sources')body=sourcesPage();else if(current.startsWith('category/'))body=categoryPage(current.split('/')[1]);else if(current.startsWith('article/'))body=articlePage(current.split('/')[1]);else body=missing();
+ if(current==='home')body=home();else if(current==='guide')body=guidePage();else if(current==='calc')body=calcPage();else if(current==='library')body=library();else if(current==='codes')body=codesPage();else if(current==='siemens-words')body=siemensWordsPage();else if(current==='saved')body=savedPage();else if(current==='sources')body=sourcesPage();else if(current.startsWith('category/'))body=categoryPage(current.split('/')[1]);else if(current.startsWith('article/'))body=articlePage(current.split('/')[1]);else body=missing();
  let y=window.scrollY;qs('#app').innerHTML=shell(current,body);if(keepScroll)window.scrollTo({top:y,behavior:'instant'});
 }
 const defaultCalc=JSON.parse(JSON.stringify(state.calc));
@@ -215,12 +256,15 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
  if(ac==='category-filter'){state.category=el.dataset.cat;render(true)}
  if(ac==='expand'){let id=el.dataset.id;state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id);render(true)}
  if(ac==='control'){state.control=el.dataset.control;state.codesQuery='';state.codesGroup='Все';render(true)}
+ if(ac==='siword-more'){state.siwordLimit+=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}
  if(ac==='code-group'){state.codesGroup=el.dataset.group;let node=qs('#code-results');const group=qs('.advanced-code-filters');if(group)group.querySelectorAll('button').forEach(btn=>{btn.classList.toggle('active',btn.dataset.group===state.codesGroup);btn.setAttribute('aria-pressed',String(btn.dataset.group===state.codesGroup))});if(node)node.innerHTML=codesRows()}
  if(ac==='calc-mode'){state.mode=el.dataset.mode;render(true)}
  if(ac==='calc-example'){state.calc[state.mode]={...defaultCalc[state.mode]};render(true);toast('Пример восстановлен')}
 });
+document.addEventListener('change',e=>{if(e.target.id==='siword-group'){state.siwordGroup=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}else if(e.target.id==='siword-doc'){state.siwordDoc=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}});
 document.addEventListener('input',e=>{
- if(e.target.id==='library-search'){state.query=e.target.value;let node=qs('#library-results');if(node)node.innerHTML=libraryResults()}
+ if(e.target.id==='siword-search'){state.siwordQuery=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}
+ else if(e.target.id==='library-search'){state.query=e.target.value;let node=qs('#library-results');if(node)node.innerHTML=libraryResults()}
  else if(e.target.id==='code-search'){state.codesQuery=e.target.value;let node=qs('#code-results');if(node)node.innerHTML=codesRows()}
  else if(e.target.dataset.calc){state.calc[state.mode][e.target.dataset.calc]=e.target.value;let node=qs('#calc-results');if(node)node.innerHTML=resultsHtml(calculator(state.mode,state.calc[state.mode]))}
 });
