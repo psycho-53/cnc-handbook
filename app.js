@@ -81,7 +81,7 @@ function home(){let priority=['drawing-tech','rough-finish-sequence','corner-ove
  ${feature('library','Справочник','Таблицы, понятия, инструмент','book')}
  ${feature('category/problems','Типовые проблемы','Вибрации, сколы, размер','wrench')}
  ${feature('category/technology','Технология','Базы, установы, стратегии','layers')}
- ${feature('codes','Стойки ЧПУ','Haas, Fanuc, Siemens 828D','monitor')}
+ ${feature('codes','Стойки ЧПУ','Редкие G-коды и режимы','monitor')}
  ${feature('category/theory','База знаний','Причины и физика процессов','graduation')}
  ${feature('guide','Маршруты технолога','Подборки тем по реальным задачам','layers')}
  </div></section>
