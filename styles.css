@@ -43,3 +43,6 @@
 .siword-filters select:focus{outline:2px solid #84acee;outline-offset:1px}
 .siword-option-note{font-size:11px;padding:7px 9px;background:#fef5e8;color:#6c4d25;border-radius:8px;margin-top:8px}
 @media(max-width:650px){.siword-filters{grid-template-columns:1fr}.siword-filters select{font-size:14px}}
+
+.reference-buttons{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+@media(max-width:650px){.reference-buttons .btn{font-size:12px;white-space:normal}}
