@@ -38,7 +38,7 @@ const byId = id => DB.articles.find(a=>a.id===id);
 const byCat = id => DB.categories.find(c=>c.id===id);
 let saved;
 try {saved = new Set(JSON.parse(localStorage.getItem('cnc-handbook-saved')||'[]').filter(x=>typeof x==='string'));} catch(e){saved=new Set()}
-const state = {saved, category:'all', query:'', codesQuery:'', control:'siemens', mode:'milling', expanded:new Set(), calc:{
+const state = {saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', mode:'milling', expanded:new Set(), calc:{
  milling:{D:'10',Vc:'160',z:'3',fz:'0,05',ap:'5',ae:'2',L:'100'},
  drilling:{D:'6',Vc:'80',fn:'0,08',L:'40'},
  reverse:{D:'10',n:'4800',z:'4',Vf:'600'},
@@ -74,7 +74,7 @@ function articleGrid(arr){return arr.length?`<div class="article-grid">${arr.map
 function empty(title,desc){return `<div class="empty">${ic('search')}<h3>${safe(title)}</h3><p>${safe(desc)}</p></div>`}
 function callout(text,warn=false){return `<div class="callout ${warn?'alert':''}">${ic(warn?'warning':'info')}<div>${text}</div></div>`}
 function heroMark(){return `<svg viewBox="0 0 260 240" aria-hidden="true"><defs><linearGradient id="steel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#7bafed" stop-opacity=".7"/><stop offset="1" stop-color="#236fbc" stop-opacity=".2"/></linearGradient></defs><path d="M35 155 122 203l103-50-93-47z" fill="none" stroke="#79b8fa" stroke-width="2"/><path d="M35 155V96l90-48 100 45v60" fill="none" stroke="#4383c0" stroke-width="1.8"/><path d="M125 48v57M225 93l-100 56-90-53" stroke="#5ba2e6" fill="none" stroke-width="1.6"/><path d="m70 125 53-28 61 30-53 27z" fill="url(#steel)" stroke="#7ebcf2"/><path d="m70 125v22l61 30v-23m53-27v20l-53 30" fill="none" stroke="#7ebcf2"/><path d="M105 67v52m-8-51h16M97 58h16l5 9H92z" stroke="#b8d8f9" stroke-width="2" fill="#2a6baf"/><path d="m105 119 4 4-4 4-4-4z" fill="#5ecbd3"/><path d="M105 26v20m-4-5 4 5 4-5M105 120h-25" stroke="#77c8ff" stroke-dasharray="4 5"/><path d="M35 155 10 170M35 155v-28" stroke="#72b8ec" stroke-width="1.4"/><path d="m10 170 9-1-4-7" stroke="#72b8ec" fill="none"/><path d="M225 153h18" stroke="#72b8ec" stroke-width="1.5"/><circle cx="125" cy="149" r="3" fill="#8dddfa"/></svg>`}
-function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v0.5.2</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
+function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v0.6.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
  <div class="mt-3 stats"><span>${DB.articles.length} проверяемых тем</span><span class="dot"></span><span>3 группы стоек</span><span class="dot"></span><span>Без ИИ</span></div>
  <section class="mt-5"><div class="section-heading"><div><h2>Рабочие разделы</h2><p class="small muted mb-0">Нужная информация — в два касания</p></div></div><div class="feature-grid">
  ${feature('calc','Калькуляторы','Обороты, подача, съём, время','calc')}
@@ -111,14 +111,33 @@ function articlePage(id){let a=byId(id);if(!a)return missing();let cat=byCat(a.c
  ${a.sources.length?`<section class="mt-5"><div class="section-heading"><h2>Источники</h2></div><ul class="source-list">${a.sources.map(s=>DB.sources[s]).filter(Boolean).map(s=>sourceItem(s)).join('')}</ul></section>`:''}
  <div class="mt-4">${callout('<strong>Важно:</strong> справочник объясняет принципы и типовые проверки. Настройки станка, инструмент и режимы всегда сверяй с документацией производителя и техпроцессом.',true)}</div>`}
 function savedPage(){let arr=DB.articles.filter(a=>state.saved.has(a.id));return `${header('Избранное','Твои сохранённые справочные статьи. Список хранится только в браузере на этом устройстве.','ЛИЧНОЕ')}${arr.length?articleGrid(arr):empty('Пока ничего нет','Нажимай значок закладки на статьях — они появятся здесь.')}`}
-function codesRows(){let c=DB.codes[state.control];let q=state.codesQuery.trim().toLocaleLowerCase('ru');let rows=c.entries.filter(x=>!q||x.join(' ').toLocaleLowerCase('ru').includes(q));return `${rows.length?`<div class="code-grid">${rows.map(([code,name,note])=>`<div class="code-card"><div class="code-title">${safe(code)}</div><strong>${safe(name)}</strong><p>${safe(note)}</p></div>`).join('')}</div>`:empty('Команда не найдена','Попробуй другой код или выбери другую систему.')}`}
-function codesPage(){let c=DB.codes[state.control];return `${header('Команды стоек ЧПУ','Быстрая памятка по распространённым командам. Для реального запуска всегда проверяй руководство станка и режим программирования.','SIEMENS · FANUC · HAAS')}
+function codesRows(){
+ const c=DB.codes[state.control], words=normalizeSearch(state.codesQuery).split(' ').filter(Boolean);
+ const all=c.entries||[];
+ const rows=all.filter(x=>(state.codesGroup==='Все'||x.group===state.codesGroup)&&
+  words.every(word=>normalizeSearch([x.code,x.name,x.group,x.purpose,x.use,x.caution].join(' ')).includes(word)));
+ return `<div class="section-heading" style="margin-bottom:16px"><h3 class="mb-0">Расширенные функции</h3><span class="count">${rows.length} из ${all.length}</span></div>
+ ${rows.length?`<div class="advanced-code-grid">${rows.map(x=>{
+   const src=DB.sources[x.source];
+   return `<article class="advanced-code-card">
+      <div class="advanced-code-heading"><div class="advanced-code-sign">${safe(x.code)}</div><span class="advanced-code-type">${safe(x.group)}</span></div>
+      <h3>${safe(x.name)}</h3>
+      <p class="advanced-code-purpose">${safe(x.purpose)}</p>
+      <div class="advanced-code-details"><strong>Где пригодится</strong><p>${safe(x.use)}</p></div>
+      <div class="advanced-code-warning"><strong>Нюанс / ограничения</strong><p>${safe(x.caution)}</p></div>
+      ${x.example?`<div class="advanced-code-example"><strong>Иллюстрация синтаксиса — не запускать без проверки</strong><pre>${safe(x.example)}</pre></div>`:''}
+      ${src?`<div class="advanced-code-source">${src.url?`<a href="${safe(src.url)}" target="_blank" rel="noopener noreferrer">Руководство: ${safe(src.name)} ${ic('external','xs')}</a>`:`Источник: ${safe(src.name)}`}</div>`:''}
+   </article>`;
+ }).join('')}</div>`:empty('Функций по запросу нет','Попробуй другой термин или выбери другой раздел.')}`;}
+function codesPage(){
+ const c=DB.codes[state.control], groups=c.groups||['Все'];
+ return `${header('Продвинутые функции стоек','Редкие и полезные команды, преобразования, режимы и циклы. Без очевидных G0/G1/G2.','SIEMENS · FANUC · HAAS')}
  <div class="controller-tabs">${Object.entries(DB.codes).map(([id,ctl])=>`<button class="btn ${state.control===id?'btn-primary':''}" data-action="control" data-control="${id}" aria-pressed="${state.control===id}">${safe(ctl.title)}</button>`).join('')}</div>
- <div class="panel mb-4"><div class="eyebrow">Выбрана система</div><h2 class="mt-2 mb-0">${safe(c.title)}</h2><p class="muted small mt-2 mb-0">${safe(c.intro)}</p>${c.source?`<div class="mt-3 small"><a href="${safe(DB.sources[c.source].url)}" target="_blank" rel="noopener noreferrer">Официальная документация ${ic('external','xs')}</a></div>`:''}</div>
- <label class="search-box mb-4">${ic('search')}<input id="code-search" type="search" placeholder="Найти G54, G43, M06..." value="${safe(state.codesQuery)}" autocomplete="off" aria-label="Поиск команды"></label>
- <div id="code-results">${codesRows()}</div>
- <div class="mt-4">${callout('<strong>Команды не взаимозаменяемы.</strong> Например, у Siemens 828D вызов инструмента и коррекции отличается от Haas/Fanuc-подобных команд G43 H… . Учитывай DIN/ISO, опции и настройки станкостроителя.',true)}</div>
- <section class="mt-5"><div class="section-heading"><h2>Подробнее по теме</h2></div><div class="related-links"><a href="#/article/work-offset">G54 и ноль детали</a><a href="#/article/tool-offsets">Корректоры инструмента</a><a href="#/article/run-check">Проверка перед запуском</a></div></section>`}
+ <div class="panel mb-4"><div class="eyebrow">Выбрана система</div><h2 class="mt-2 mb-0">${safe(c.title)}</h2><p class="muted small mt-2 mb-0">${safe(c.intro)}</p><p class="small muted mt-3 mb-0">Важно: один и тот же номер G может означать разные функции на Siemens, FANUC и Haas. Поддержка определяется серией, версиями ПО, опциями и настройками изготовителя станка.</p></div>
+ <label class="search-box mb-3">${ic('search')}<input id="code-search" type="search" placeholder="G291, SUPA, CYCLE832, G05.1, G187…" value="${safe(state.codesQuery)}" autocomplete="off" aria-label="Поиск расширенной команды"></label>
+ <div class="filters advanced-code-filters" aria-label="Разделы расширенных команд">${groups.map(g=>`<button class="chip ${state.codesGroup===g?'active':''}" data-action="code-group" data-group="${safe(g)}" aria-pressed="${state.codesGroup===g}">${safe(g)}</button>`).join('')}</div>
+ <div id="code-results" aria-live="polite">${codesRows()}</div>
+ <section class="mt-5"><div class="section-heading"><h2>Теория рядом с командами</h2></div><div class="related-links"><a href="#/article/gcode-state">Модальные состояния</a><a href="#/article/path-tolerance">Точный останов и LookAhead</a><a href="#/article/fourth-axis-index">Индексная 4-я ось</a><a href="#/article/tool-offsets">Коррекции инструмента</a><a href="#/article/cam-review">Проверка после постпроцессора</a></div></section>`;}
 function sourceItem(s){return `<li>${s.url?`<a href="${safe(s.url)}" target="_blank" rel="noopener noreferrer">${safe(s.name)} ${ic('external','xs')}</a>`:`<strong>${safe(s.name)}</strong>`}${s.details?`<p class="small muted">${safe(s.details)}</p>`:''}</li>`}
 function sourcesPage(){return `${header('Источники и ограничения','Документы производителей, на которых основаны формулы и часть пояснений.','О ПРОЕКТЕ')}
  <div class="panel"><h2>Проверяемые материалы</h2><ul class="source-list">${Object.values(DB.sources).map(s=>sourceItem(s)).join('')}</ul><hr><h3>Границы применимости</h3><p class="small muted">Калькулятор производит арифметический расчёт, а не подбирает инструмент за тебя. Значения Vc, fz, fn, ap и ae следует назначать по материалу, маркировке и геометрии инструмента, жёсткости станка и рекомендациям производителя. Примеры чисел не являются готовыми производственными режимами.</p><p class="small muted">Таблица команд не заменяет руководство системы ЧПУ, инструкции производителя станка, утверждённый техпроцесс и требования охраны труда. Для размеров с допусками нужны актуальные стандарты и официальные таблицы; непроверенные численные поля допусков здесь не приводятся.</p><p class="small muted mb-0">Сайт не отправляет расчёты, сохранённые статьи или запросы поиска на сервер. Данные избранного хранятся локально в этом браузере.</p></div>`}
@@ -195,7 +214,8 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
  if(ac==='bookmark'){let id=el.dataset.id;if(!byId(id))return;state.saved.has(id)?state.saved.delete(id):state.saved.add(id);try{localStorage.setItem('cnc-handbook-saved',JSON.stringify([...state.saved]))}catch(_){}render(true);toast(state.saved.has(id)?'Сохранено в избранном':'Убрано из избранного')}
  if(ac==='category-filter'){state.category=el.dataset.cat;render(true)}
  if(ac==='expand'){let id=el.dataset.id;state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id);render(true)}
- if(ac==='control'){state.control=el.dataset.control;state.codesQuery='';render(true)}
+ if(ac==='control'){state.control=el.dataset.control;state.codesQuery='';state.codesGroup='Все';render(true)}
+ if(ac==='code-group'){state.codesGroup=el.dataset.group;let node=qs('#code-results');const group=qs('.advanced-code-filters');if(group)group.querySelectorAll('button').forEach(btn=>{btn.classList.toggle('active',btn.dataset.group===state.codesGroup);btn.setAttribute('aria-pressed',String(btn.dataset.group===state.codesGroup))});if(node)node.innerHTML=codesRows()}
  if(ac==='calc-mode'){state.mode=el.dataset.mode;render(true)}
  if(ac==='calc-example'){state.calc[state.mode]={...defaultCalc[state.mode]};render(true);toast('Пример восстановлен')}
 });
