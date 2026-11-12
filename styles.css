@@ -15,3 +15,23 @@
  section,svg{break-inside:avoid} a{color:black!important;text-decoration:none}
  svg{max-height:75mm} h1{font-size:22pt} h3{break-after:avoid}
 }
+
+/* Продвинутые команды стоек: отдельные карточки с проверяемыми условиями. */
+.advanced-code-filters{margin:0 0 20px;display:flex;flex-wrap:wrap;gap:8px}
+.advanced-code-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.advanced-code-card{min-width:0;background:#fff;border:1px solid var(--line);border-radius:16px;padding:21px;box-shadow:var(--sh)}
+.advanced-code-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px}
+.advanced-code-sign{font-family:"SFMono-Regular",Consolas,Menlo,monospace;font-size:18px;font-weight:850;color:#124b90;overflow-wrap:anywhere}
+.advanced-code-type{font-size:11px;font-weight:800;color:#596e85;letter-spacing:.02em;padding:5px 8px;background:#eef3f8;border-radius:7px}
+.advanced-code-card h3{font-size:16px;margin:0 0 8px}
+.advanced-code-purpose{font-size:14px;margin:0 0 15px}
+.advanced-code-details,.advanced-code-warning,.advanced-code-example{padding:12px 13px;border-radius:11px;margin:11px 0;background:#f6f8fb;font-size:13px}
+.advanced-code-warning{border-left:3px solid #c28a49;background:#fcf8f1}
+.advanced-code-details strong,.advanced-code-warning strong,.advanced-code-example strong{font-size:12px}
+.advanced-code-details p,.advanced-code-warning p{margin:5px 0 0}
+.advanced-code-example pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:9px 0 0;background:#e9eff7;padding:12px;border-radius:7px;line-height:1.5;font-size:12px}
+.advanced-code-source{font-size:11px;margin-top:17px;color:var(--muted);overflow-wrap:anywhere}
+.advanced-code-source a{display:inline;overflow-wrap:anywhere}
+.advanced-code-source a svg{display:inline-block;vertical-align:middle}
+@media(max-width:900px){.advanced-code-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.advanced-code-card{padding:16px}.advanced-code-sign{font-size:16px}.advanced-code-purpose{font-size:13px}.advanced-code-filters{gap:6px}.advanced-code-filters .chip{font-size:11px}}
