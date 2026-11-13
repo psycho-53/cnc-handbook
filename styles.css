@@ -46,3 +46,55 @@
 
 .reference-buttons{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
 @media(max-width:650px){.reference-buttons .btn{font-size:12px;white-space:normal}}
+
+/* Академия фрезерования — самостоятельный учебный раздел */
+.acad-hero{background:linear-gradient(125deg,#152943,#24517b);color:#f5f9ff;padding:30px;border-radius:18px}
+.acad-hero h2{font-size:26px;max-width:670px;color:#fff;margin-top:7px}
+.acad-hero p{color:#d5e3f2;max-width:690px}
+.acad-progress-top{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:750;margin-top:20px}
+.acad-progress-track{height:9px;background:#45617c;border-radius:20px;overflow:hidden;margin-top:7px}
+.acad-progress-track>div{height:100%;background:#86d8d2;transition:width .18s ease;border-radius:20px}
+.acad-lesson-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.acad-lesson{min-width:0;display:flex;gap:13px;padding:18px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.acad-lesson-index{font-size:22px;letter-spacing:-.8px;font-weight:850;color:#2569d5;line-height:1.1;flex:0 0 32px}
+.acad-lesson-body{min-width:0}
+.acad-lesson h3{font-size:16px;line-height:1.27;margin-bottom:8px}
+.acad-lesson p{font-size:13px;color:#536883;margin-bottom:7px}
+.acad-lesson-task{font-size:12px;color:#596f8c;padding:9px 0;border-top:1px solid #edf1f7}
+.acad-lesson-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:9px}
+.acad-lesson-actions .btn{font-size:12px}
+.acad-lab-layout{display:grid;grid-template-columns:minmax(250px,.86fr) minmax(0,1.35fr);gap:15px;align-items:start}
+.acad-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 12px}
+.acad-field label{display:flex;flex-direction:column;gap:1px;font-weight:700;font-size:12px;color:#334e6b;margin-bottom:5px}
+.acad-field small{font-size:11px;color:#73869b;font-weight:500}
+.acad-field input{width:100%;min-width:0;padding:11px 12px;border-radius:10px;border:1px solid #cedae7;background:#fff;color:#1b3550;font-size:16px}
+.acad-field input:focus{outline:2px solid #83acec;outline-offset:1px}
+.acad-lab-results{min-width:0}
+.acad-metrics-heading{border:1px solid var(--line);border-radius:12px;background:#eef5ff;padding:13px 14px;font-size:13px;margin-bottom:12px}
+.acad-metrics-heading span{font-size:11px;color:#66809c}
+.acad-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.acad-case{min-width:0;background:#fff;border:1px solid #d7e5f4;border-top:4px solid #1d6fe5;border-radius:13px;padding:14px}
+.acad-case-b{border-top-color:#bd7b2c}
+.acad-case-top{display:flex;flex-direction:column;gap:3px;margin-bottom:11px}
+.acad-case-top strong{font-size:15px}
+.acad-case-top span{font-size:12px;color:#687c94}
+.acad-case-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #edf1f7;font-size:12px}
+.acad-case-row span{color:#59738b}
+.acad-case-row b{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.acad-chart{background:#fff;border:1px solid var(--line);padding:14px;margin-top:12px;border-radius:13px}
+.acad-chart h3{font-size:14px;margin-bottom:10px}
+.acad-plot{width:100%;height:auto;max-height:320px;display:block}
+.acad-insight{background:#eff5fc;border-left:3px solid #3588ce;padding:15px;border-radius:9px;margin:12px 0;font-size:13px}
+.acad-insight p{margin:8px 0 0}
+.acad-quiz-progress{font-size:13px;color:#5d728a;margin:0 0 13px}
+.acad-question{background:white;border:1px solid var(--line);border-radius:15px;padding:20px;margin:12px 0}
+.acad-question h3{font-size:16px;margin:8px 0 14px}
+.acad-options{display:grid;gap:8px}
+.acad-option{display:block;text-align:left;width:100%;padding:12px 14px;border-radius:11px;border:1px solid #dbe4ef;background:#f7f9fc;color:#233e57;font-size:13px;line-height:1.4}
+.acad-option:hover{border-color:#8faee0;background:#eef4ff}
+.acad-option.selected{background:#e9f2ff;border-color:#3781e9}
+.acad-feedback{margin-top:12px;padding:13px 14px;border-radius:10px;background:#e9f6f0;color:#174f38;border:1px solid #b8e0c7;font-size:13px}
+.acad-feedback.incorrect{background:#fff7e9;border:1px solid #f0d6a4;color:#74521b}
+@media(max-width:1080px){.acad-lesson-list{grid-template-columns:1fr}.acad-lab-layout{grid-template-columns:1fr}}
+@media(max-width:640px){.acad-hero{padding:22px 18px}.acad-hero h2{font-size:22px}.acad-lesson{padding:15px}.acad-compare{grid-template-columns:1fr}.acad-field input{font-size:16px}.acad-question{padding:16px}}
+@media print{.acad-lesson-actions,.acad-options{display:none}.acad-hero{color:#000;background:#fff}}
