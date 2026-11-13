@@ -1,0 +1,47 @@
+name: CNC Handbook mobile practicum tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app.js'
+      - 'styles.css'
+      - 'index.html'
+      - 'practice-*.js'
+      - 'tests/mobile-practice.mjs'
+      - 'package.json'
+      - '.github/workflows/mobile-practice.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-practice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install test dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/cnc-http.log 2>&1 &
+          sleep 2
+      - name: Test iPhone widths and real interactions
+        run: npm run test:mobile
+      - name: Upload phone screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cnc-practicum-mobile-screenshots
+          path: test-results/*.png
+          if-no-files-found: ignore
+          retention-days: 7
