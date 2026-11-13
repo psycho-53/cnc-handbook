@@ -39,7 +39,7 @@ const byCat = id => DB.categories.find(c=>c.id===id);
 let saved;
 try {saved = new Set(JSON.parse(localStorage.getItem('cnc-handbook-saved')||'[]').filter(x=>typeof x==='string'));} catch(e){saved=new Set()}
 let academyDone;try{academyDone=new Set(JSON.parse(localStorage.getItem('cnc-academy-done')||'[]').filter(x=>typeof x==='string'))}catch(_){academyDone=new Set()}
-const state = {academyDone, materialsCompare:{left:'kh40',right:'khgsa30'},materialsQuiz:{}, academyQuiz:{}, academyFields:{D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'}, saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, fanwordQuery:'', fanwordGroup:'Все группы', fanwordLimit:24, mode:'milling', expanded:new Set(), calc:{
+const state = {academyDone, materialsCompare:{left:'kh40',right:'khgsa30'}, gradeQuery:'',gradeGroup:'all',gradeLimit:24,materialsQuiz:{}, academyQuiz:{}, academyFields:{D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'}, saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, fanwordQuery:'', fanwordGroup:'Все группы', fanwordLimit:24, mode:'milling', expanded:new Set(), calc:{
  milling:{D:'10',Vc:'160',z:'3',fz:'0,05',ap:'5',ae:'2',L:'100'},
  drilling:{D:'6',Vc:'80',fn:'0,08',L:'40'},
  reverse:{D:'10',n:'4800',z:'4',Vf:'600'},
@@ -65,7 +65,7 @@ function sidebar(r){return `<aside class="sidebar">
  </aside>`}
 function topbar(r){return `<div class="topbar"><a class="mobile-brand" href="#/home" aria-label="Главная CNC Handbook"><span class="brand-emblem">CNC</span> Handbook</a><div><div class="topbar-title">${safe(pageName(r))}</div><div class="topbar-sub">Техническая база фрезеровщика</div></div><div class="top-actions"><a class="icon-btn" href="#/library" aria-label="Поиск по справочнику" title="Поиск">${ic('search')}</a><a class="icon-btn" href="#/saved" aria-label="Избранное" title="Избранное">${ic('bookmark')}</a></div></div>`}
 function bottomNav(r){let mobile=[['home','Главная','home'],['calc','Расчёты','calc'],['library','Поиск','search'],['codes','Стойки','monitor'],['academy','Академия','graduation']];return `<nav class="nav-bottom" aria-label="Основная навигация">${mobile.map(([id,t,i])=>`<a class="${id==='library'?(r==='library'||r.startsWith('article/')||r.startsWith('category/')?'active':''):(id===r?'active':'')}" href="${link(id)}" aria-label="${safe(t)}">${ic(i)}<span>${t}</span></a>`).join('')}</nav>`}
-function footer(){return `<footer class="footer"><span>CNC Handbook · версия 1.0.0 · 2026</span><a href="#/sources">Источники и ограничения</a></footer>`}
+function footer(){return `<footer class="footer"><span>CNC Handbook · версия 1.1.0 · 2026</span><a href="#/sources">Источники и ограничения</a></footer>`}
 function shell(r,body){return `<div class="app-shell">${sidebar(r)}<div class="page-wrap">${topbar(r)}<main class="main" id="main-content">${body}${footer()}</main></div>${bottomNav(r)}</div>`}
 function crumb(links){return `<div class="breadcrumb">${links.map(([t,r],i)=>`${i?ic('chevron'):''}${r?`<a href="${link(r)}">${safe(t)}</a>`:`<span>${safe(t)}</span>`}`).join('')}</div>`}
 function header(title,desc,sub=''){return `<div class="page-intro">${sub?`<div class="eyebrow mb-3">${safe(sub)}</div>`:''}<h1>${safe(title)}</h1><p>${safe(desc)}</p></div>`}
@@ -75,7 +75,7 @@ function articleGrid(arr){return arr.length?`<div class="article-grid">${arr.map
 function empty(title,desc){return `<div class="empty">${ic('search')}<h3>${safe(title)}</h3><p>${safe(desc)}</p></div>`}
 function callout(text,warn=false){return `<div class="callout ${warn?'alert':''}">${ic(warn?'warning':'info')}<div>${text}</div></div>`}
 function heroMark(){return `<svg viewBox="0 0 260 240" aria-hidden="true"><defs><linearGradient id="steel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#7bafed" stop-opacity=".7"/><stop offset="1" stop-color="#236fbc" stop-opacity=".2"/></linearGradient></defs><path d="M35 155 122 203l103-50-93-47z" fill="none" stroke="#79b8fa" stroke-width="2"/><path d="M35 155V96l90-48 100 45v60" fill="none" stroke="#4383c0" stroke-width="1.8"/><path d="M125 48v57M225 93l-100 56-90-53" stroke="#5ba2e6" fill="none" stroke-width="1.6"/><path d="m70 125 53-28 61 30-53 27z" fill="url(#steel)" stroke="#7ebcf2"/><path d="m70 125v22l61 30v-23m53-27v20l-53 30" fill="none" stroke="#7ebcf2"/><path d="M105 67v52m-8-51h16M97 58h16l5 9H92z" stroke="#b8d8f9" stroke-width="2" fill="#2a6baf"/><path d="m105 119 4 4-4 4-4-4z" fill="#5ecbd3"/><path d="M105 26v20m-4-5 4 5 4-5M105 120h-25" stroke="#77c8ff" stroke-dasharray="4 5"/><path d="M35 155 10 170M35 155v-28" stroke="#72b8ec" stroke-width="1.4"/><path d="m10 170 9-1-4-7" stroke="#72b8ec" fill="none"/><path d="M225 153h18" stroke="#72b8ec" stroke-width="1.5"/><circle cx="125" cy="149" r="3" fill="#8dddfa"/></svg>`}
-function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v1.0.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/academy">${ic('graduation')} Академия фрезерования</a><a class="btn btn-dark-outline" href="#/materials">${ic('layers')} Материаловедение</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
+function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v1.1.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/academy">${ic('graduation')} Академия фрезерования</a><a class="btn btn-dark-outline" href="#/materials">${ic('layers')} Материаловедение</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
  <div class="mt-3 stats"><span>${DB.articles.length} проверяемых тем</span><span class="dot"></span><span>3 группы стоек</span><span class="dot"></span><span>Без ИИ</span></div>
  <section class="mt-5"><div class="section-heading"><div><h2>Рабочие разделы</h2><p class="small muted mb-0">Нужная информация — в два касания</p></div></div><div class="feature-grid">
  ${feature('calc','Калькуляторы','Обороты, подача, съём, время','calc')}
@@ -306,6 +306,24 @@ function matComparison(){
  return `<div class="mat-compare-row">${[['left','Материал А',a.id],['right','Материал Б',b.id]].map(([side,label,value])=>`<label><span>${label}</span><select data-mat-compare="${side}" aria-label="${label}">${g.map(x=>`<option value="${safe(x.id)}" ${x.id===value?'selected':''}>${safe(x.name)}</option>`).join('')}</select></label>`).join('')}</div>
  <div class="mat-card-grid">${matCompareCard(a)}${matCompareCard(b)}</div><p class="small muted mt-2">${safe(db.disclaimer)}</p>`;
 }
+function gradeMatch(){
+ const query=normalizeSearch(state.gradeQuery),terms=query.split(' ').filter(Boolean);
+ return (DB.materialGradeAtlas||[]).filter(g=>(state.gradeGroup==='all'||g.group===state.gradeGroup)&&terms.every(t=>normalizeSearch([g.name,g.subgroup,g.group,g.std,g.overview,g.behavior,g.risk,g.checks].join(' ')).includes(t)));
+}
+function gradeResults(){
+ const all=gradeMatch(),shown=all.slice(0,state.gradeLimit);
+ return `<div class="section-heading"><h3>Марки металлов</h3><span class="count">${all.length} из ${DB.materialGradeAtlas.length}</span></div>
+ ${shown.length?`<div class="grade-atlas-grid">${shown.map(g=>`<article class="grade-atlas-card">
+ <div class="grade-atlas-top"><strong>${safe(g.name)}</strong><span>${safe(g.group)}</span></div>
+ <div class="grade-atlas-sub">${safe(g.subgroup)} · ${safe(g.std)}</div>
+ <p>${safe(g.overview)}</p><div class="grade-atlas-risk"><strong>Обработка:</strong> ${safe(g.behavior)}</div>
+ <div class="grade-atlas-foot"><a class="btn btn-sm btn-primary" href="#/article/${safe(g.link)}">Открыть подробный разбор ${ic('chevron','xs')}</a></div></article>`).join('')}</div>
+ ${all.length>shown.length?`<div class="grade-atlas-more"><button type="button" class="btn btn-quiet" data-action="grade-more">Показать ещё (${all.length-shown.length})</button></div>`:''}
+ `:empty('Марки не найдены','Попробуй название без пробелов или выбери другую группу, например: 40, Д16Т, ВТ1-0.')}`;}
+function gradeFinder(){
+ const cats=DB.materialGradeGroups||[];return `<label class="search-box mb-3">${ic('search')}<input type="search" id="grade-search" placeholder="Сталь 40, 45, Д16Т, ВТ1-0, ШХ15…" value="${safe(state.gradeQuery)}" autocomplete="off" aria-label="Найти марку металла"></label>
+ <div class="grade-filter-bar" role="group" aria-label="Группа материалов">${cats.map(g=>`<button type="button" class="chip ${state.gradeGroup===g.id?'active':''}" data-action="grade-group" data-group="${safe(g.id)}" aria-pressed="${state.gradeGroup===g.id}">${safe(g.label)}</button>`).join('')}</div>
+ <div id="grade-results" aria-live="polite">${gradeResults()}</div>`;}
 function matQuiz(){
  const qq=DB.materialsGuide.quiz,answers=state.materialsQuiz;
  const done=Object.keys(answers).length,correct=qq.filter((q,i)=>answers[i]===q.correct).length;
@@ -317,9 +335,10 @@ function matQuiz(){
 function materialsPage(){
  const guide=DB.materialsGuide; const total=guide.groups.reduce((sum,x)=>sum+x.ids.length,0);
  return `${header('Материаловедение для фрезеровщика','Не просто марки и свойства: почему металл меняет силы резания, стружку, геометрию детали и износ инструмента.','ЭНЦИКЛОПЕДИЯ · МАТЕРИАЛЫ И ОБРАБОТКА')}
- <section class="mat-hero"><div class="eyebrow">18 УГЛУБЛЁННЫХ СТАТЕЙ · 5 ТЕМАТИЧЕСКИХ БЛОКОВ</div><h2>От микроструктуры до решения технолога</h2>
+ <section class="mat-hero"><div class="eyebrow">${DB.articles.filter(x=>x.cat==='materials').length} СТАТЕЙ · ${DB.materialGradeAtlas.length} МАРОК · 5 ТЕМАТИЧЕСКИХ БЛОКОВ</div><h2>От микроструктуры до решения технолога</h2>
  <p>Сравни 40Х и 30ХГСА после термообработки, узнай механизм наклёпа у нержавейки и абразивного износа на силумине. Во всех темах — объяснение, производственные проверки и источники.</p>
  <div class="mat-hero-links"><a class="btn btn-primary" href="#/article/mat-steel-40kh">40Х — подробный разбор</a><a class="btn btn-quiet" href="#/article/mat-steel-30khgsa">30ХГСА</a><a class="btn btn-quiet" href="#/article/mat-heat-treat">Термообработка</a></div></section>
+ <section class="mt-5" id="grades"><div class="section-heading"><div><h2>Марочник для фрезеровщика</h2><p class="small muted mb-0">От Ст3сп и стали 40 до Д16Т, ВТ6 и латуни. Название, состав, состояние, обработка и типичные ошибки.</p></div></div><div class="mat-grade-finder">${gradeFinder()}</div></section>
  <section class="mt-5"><div class="section-heading"><div><h2>Сравнение материалов</h2><p class="small muted mb-0">Выбери два материала: свойства, риски и перечень проверок перед фрезерованием.</p></div></div>
  <div id="mat-comparison" aria-live="polite">${matComparison()}</div></section>
  <section class="mt-5"><div class="section-heading"><div><h2>Маршрут изучения</h2><p class="small muted mb-0">${total} материалов, сгруппированных от структуры к практическому выбору.</p></div></div>
@@ -328,7 +347,10 @@ function materialsPage(){
  <section class="mt-5"><div class="section-heading"><div><h2>Технологические ситуации</h2><p class="small muted mb-0">Проверка понимания механизмов, а не запоминания названий марок.</p></div></div>
  <div id="mat-quiz" aria-live="polite">${matQuiz()}</div></section>
  <section class="mt-5"><div class="section-heading"><h2>Источники и ограничения</h2></div><div class="panel"><p class="small">${safe(guide.disclaimer)}</p><div class="related-links">
- <a href="https://rosgosts.ru/77/140/gost_4543-2016" target="_blank" rel="noopener noreferrer">ГОСТ 4543-2016</a>
+ <a href="https://protect.gost.ru/gost/details/c4fa5bc1-a80f-42a5-b551-19a62b619715" target="_blank" rel="noopener noreferrer">ГОСТ 1050-2013</a>
+ <a href="https://protect.gost.ru/gost/details/ec049aa0-9abc-406e-be53-2fcae00b74ef" target="_blank" rel="noopener noreferrer">ГОСТ 4784-2019</a>
+ <a href="https://protect.gost.ru/gost/details/ecc4dd16-d27c-4f70-ac8b-f89ce5943f5f" target="_blank" rel="noopener noreferrer">ГОСТ 19807-91</a>
+ <a href="https://protect.gost.ru/gost/details/c92d1dfe-647b-4048-9f69-400b4bf98888" target="_blank" rel="noopener noreferrer">ГОСТ 4543-2016</a>
  <a href="https://dl.asminternational.org/handbooks/edited-volume/18/Steel-Heat-Treating-Fundamentals-and-Processes" target="_blank" rel="noopener noreferrer">ASM — основы термообработки</a>
  <a href="https://www.sandvik.coromant.cn/zh-cn/knowledge/materials/workpiece-materials" target="_blank" rel="noopener noreferrer">Sandvik — материалы и ISO-группы</a>
  <a href="https://bssa.org.uk/bssa_articles/general-principles-of-machining-stainless-steels/" target="_blank" rel="noopener noreferrer">BSSA — обработка нержавеющих сталей</a></div></div></section>
@@ -408,6 +430,8 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
  if(ac==='expand'){let id=el.dataset.id;state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id);render(true)}
  if(ac==='control'){state.control=el.dataset.control;state.codesQuery='';state.codesGroup='Все';render(true)}
  if(ac==='academy-reset'){state.academyFields={D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'};render(true)}
+ if(ac==='grade-more'){state.gradeLimit+=24;const node=qs('#grade-results');if(node)node.innerHTML=gradeResults()}
+ if(ac==='grade-group'){state.gradeGroup=el.dataset.group;state.gradeLimit=24;const box=qs('.grade-filter-bar');if(box)box.querySelectorAll('button').forEach(btn=>{btn.classList.toggle('active',btn.dataset.group===state.gradeGroup);btn.setAttribute('aria-pressed',String(btn.dataset.group===state.gradeGroup))});const node=qs('#grade-results');if(node)node.innerHTML=gradeResults()}
  if(ac==='mat-answer'){const i=Number(el.dataset.q),j=Number(el.dataset.opt);if(DB.materialsGuide.quiz[i]?.answers[j]===undefined)return;state.materialsQuiz[i]=j;const node=qs('#mat-quiz');if(node)node.innerHTML=matQuiz()}
  if(ac==='academy-answer'){const i=Number(el.dataset.q),j=Number(el.dataset.opt);if(DB.academy.quiz[i]?.options[j]===undefined)return;state.academyQuiz[i]=j;const node=qs('#academy-quiz');if(node)node.innerHTML=academyQuizBlock()}
  if(ac==='academy-complete'){const id=el.dataset.id;if(!DB.academy.lessons.some(x=>x.id===id))return;state.academyDone.has(id)?state.academyDone.delete(id):state.academyDone.add(id);try{localStorage.setItem('cnc-academy-done',JSON.stringify([...state.academyDone]))}catch(_){}render(true)}
@@ -420,6 +444,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
 document.addEventListener('change',e=>{if(e.target.dataset.matCompare){state.materialsCompare[e.target.dataset.matCompare]=e.target.value;const node=qs('#mat-comparison');if(node)node.innerHTML=matComparison()}else if(e.target.id==='fanword-group'){state.fanwordGroup=e.target.value;state.fanwordLimit=24;const node=qs('#fanword-results');if(node)node.innerHTML=fanwordResults()}else if(e.target.id==='siword-group'){state.siwordGroup=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}else if(e.target.id==='siword-doc'){state.siwordDoc=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}});
 document.addEventListener('input',e=>{
  if(e.target.dataset.acadField){state.academyFields[e.target.dataset.acadField]=e.target.value;const node=qs('#academy-results');if(node)node.innerHTML=academyResults()}
+ else if(e.target.id==='grade-search'){state.gradeQuery=e.target.value;state.gradeLimit=24;const node=qs('#grade-results');if(node)node.innerHTML=gradeResults()}
  else if(e.target.id==='fanword-search'){state.fanwordQuery=e.target.value;state.fanwordLimit=24;const node=qs('#fanword-results');if(node)node.innerHTML=fanwordResults()}
  else if(e.target.id==='siword-search'){state.siwordQuery=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}
  else if(e.target.id==='library-search'){state.query=e.target.value;let node=qs('#library-results');if(node)node.innerHTML=libraryResults()}
