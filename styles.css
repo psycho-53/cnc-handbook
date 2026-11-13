@@ -98,3 +98,30 @@
 @media(max-width:1080px){.acad-lesson-list{grid-template-columns:1fr}.acad-lab-layout{grid-template-columns:1fr}}
 @media(max-width:640px){.acad-hero{padding:22px 18px}.acad-hero h2{font-size:22px}.acad-lesson{padding:15px}.acad-compare{grid-template-columns:1fr}.acad-field input{font-size:16px}.acad-question{padding:16px}}
 @media print{.acad-lesson-actions,.acad-options{display:none}.acad-hero{color:#000;background:#fff}}
+
+/* Материаловедение: справочник марок, сравнение и маршруты */
+.mat-hero{padding:26px 28px;border-radius:17px;background:linear-gradient(120deg,#eaf2fd,#f7f9fe);border:1px solid #d2e1f3}
+.mat-hero h2{margin:10px 0;font-size:25px;color:#163852}
+.mat-hero p{max-width:690px;color:#475f78;font-size:14px;line-height:1.55}
+.mat-hero-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.mat-compare-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-bottom:14px}
+.mat-compare-row label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:720;color:#45617b}
+.mat-compare-row select{min-width:0;width:100%;border:1px solid #cddcec;background:#fff;border-radius:11px;padding:12px 10px;color:#173b5d;font-size:14px}
+.mat-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.mat-grade{background:#fff;border:1px solid #d4e1ee;border-radius:14px;padding:18px;min-width:0;display:flex;flex-direction:column;gap:10px}
+.mat-grade-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.mat-grade h3{margin:0;font-size:19px}
+.mat-grade-top span{font-size:11px;color:#29638d;background:#e8f3fd;padding:6px 8px;border-radius:7px;font-weight:700}
+.mat-grade-category{font-size:12px;color:#617c97}
+.mat-fact{border-top:1px solid #e7eef6;padding-top:10px}
+.mat-fact strong{font-size:12px;color:#24435e}
+.mat-fact p{font-size:13px;color:#4a647c;margin:5px 0 0;line-height:1.5}
+.mat-grade .btn{align-self:flex-start;margin-top:auto}
+.mat-section h3{font-size:18px}
+.mat-lesson-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mat-lesson-links a{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #dde7f0;border-radius:10px;text-decoration:none;font-size:13px;line-height:1.35;color:#214e7a;background:#fafcff}
+.mat-lesson-links a span{flex:none;color:#829ab4;font-size:11px;font-weight:750}
+.mat-lesson-links a svg{flex:none;margin-left:auto}
+.mat-lesson-links a:hover{border-color:#7eace1;background:#f1f7ff}
+@media(max-width:750px){.mat-card-grid,.mat-lesson-links{grid-template-columns:1fr}}
+@media(max-width:540px){.mat-hero{padding:20px 16px}.mat-hero h2{font-size:22px}.mat-compare-row{grid-template-columns:1fr}.mat-grade{padding:16px}}
