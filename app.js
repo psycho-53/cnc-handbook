@@ -39,7 +39,7 @@ const byCat = id => DB.categories.find(c=>c.id===id);
 let saved;
 try {saved = new Set(JSON.parse(localStorage.getItem('cnc-handbook-saved')||'[]').filter(x=>typeof x==='string'));} catch(e){saved=new Set()}
 let academyDone;try{academyDone=new Set(JSON.parse(localStorage.getItem('cnc-academy-done')||'[]').filter(x=>typeof x==='string'))}catch(_){academyDone=new Set()}
-const state = {academyDone, materialsCompare:{left:'kh40',right:'khgsa30'}, gradeQuery:'',gradeGroup:'all',gradeLimit:24,materialsQuiz:{}, academyQuiz:{}, academyFields:{D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'}, saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, fanwordQuery:'', fanwordGroup:'Все группы', fanwordLimit:24, mode:'milling', expanded:new Set(), calc:{
+const state = {academyDone, materialsCompare:{left:'mat-grade-steel-05',right:'mat-steel-40kh'}, gradeQuery:'',gradeGroup:'all',gradeLimit:24,materialsQuiz:{}, academyQuiz:{}, academyFields:{D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'}, saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, fanwordQuery:'', fanwordGroup:'Все группы', fanwordLimit:24, mode:'milling', expanded:new Set(), calc:{
  milling:{D:'10',Vc:'160',z:'3',fz:'0,05',ap:'5',ae:'2',L:'100'},
  drilling:{D:'6',Vc:'80',fn:'0,08',L:'40'},
  reverse:{D:'10',n:'4800',z:'4',Vf:'600'},
@@ -294,21 +294,21 @@ function academyPage(){
 }
 
 function matCompareCard(grade){
- return `<article class="mat-grade"><div class="mat-grade-top"><h3>${safe(grade.name)}</h3><span>${safe(grade.iso)}</span></div><div class="mat-grade-category">${safe(grade.category)}</div>
- <div class="mat-fact"><strong>Поведение при обработке</strong><p>${safe(grade.feature)}</p></div>
+ return `<article class="mat-grade"><div class="mat-grade-top"><h3>${safe(grade.name)}</h3><span>${safe(grade.iso||grade.std||"Марка")}</span></div><div class="mat-grade-category">${safe(grade.category||grade.subgroup)}</div>
+ <div class="mat-fact"><strong>Поведение при обработке</strong><p>${safe(grade.feature||grade.behavior)}</p></div>
  <div class="mat-fact"><strong>Что может пойти не так</strong><p>${safe(grade.risk)}</p></div>
- <div class="mat-fact"><strong>Что проверить</strong><p>${safe(grade.check)}</p></div>
+ <div class="mat-fact"><strong>Что проверить</strong><p>${safe(grade.check||grade.checks)}</p></div>
  <a class="btn btn-sm btn-quiet" href="#/article/${safe(grade.link)}">Разобрать материал ${ic('chevron','xs')}</a></article>`;
 }
 function matComparison(){
- const db=DB.materialsGuide,g=db.grades;
+ const db=DB.materialsGuide,g=(DB.materialGradeAtlas||[]).length?DB.materialGradeAtlas:db.grades;
  const a=g.find(x=>x.id===state.materialsCompare.left)||g[0],b=g.find(x=>x.id===state.materialsCompare.right)||g[1];
  return `<div class="mat-compare-row">${[['left','Материал А',a.id],['right','Материал Б',b.id]].map(([side,label,value])=>`<label><span>${label}</span><select data-mat-compare="${side}" aria-label="${label}">${g.map(x=>`<option value="${safe(x.id)}" ${x.id===value?'selected':''}>${safe(x.name)}</option>`).join('')}</select></label>`).join('')}</div>
  <div class="mat-card-grid">${matCompareCard(a)}${matCompareCard(b)}</div><p class="small muted mt-2">${safe(db.disclaimer)}</p>`;
 }
 function gradeMatch(){
  const query=normalizeSearch(state.gradeQuery),terms=query.split(' ').filter(Boolean);
- return (DB.materialGradeAtlas||[]).filter(g=>(state.gradeGroup==='all'||g.group===state.gradeGroup)&&terms.every(t=>normalizeSearch([g.name,g.subgroup,g.group,g.std,g.overview,g.behavior,g.risk,g.checks].join(' ')).includes(t)));
+ return (DB.materialGradeAtlas||[]).filter(g=>(state.gradeGroup==='all'||g.group===state.gradeGroup)&&terms.every(t=>normalizeSearch([g.name,g.subgroup,g.group,g.std,g.overview,g.behavior,g.risk,g.checks,(g.aliases||[]).join(' ')].join(' ')).includes(t)));
 }
 function gradeResults(){
  const all=gradeMatch(),shown=all.slice(0,state.gradeLimit);
@@ -339,7 +339,7 @@ function materialsPage(){
  <p>Сравни 40Х и 30ХГСА после термообработки, узнай механизм наклёпа у нержавейки и абразивного износа на силумине. Во всех темах — объяснение, производственные проверки и источники.</p>
  <div class="mat-hero-links"><a class="btn btn-primary" href="#/article/mat-steel-40kh">40Х — подробный разбор</a><a class="btn btn-quiet" href="#/article/mat-steel-30khgsa">30ХГСА</a><a class="btn btn-quiet" href="#/article/mat-heat-treat">Термообработка</a></div></section>
  <section class="mt-5" id="grades"><div class="section-heading"><div><h2>Марочник для фрезеровщика</h2><p class="small muted mb-0">От Ст3сп и стали 40 до Д16Т, ВТ6 и латуни. Название, состав, состояние, обработка и типичные ошибки.</p></div></div><div class="mat-grade-finder">${gradeFinder()}</div></section>
- <section class="mt-5"><div class="section-heading"><div><h2>Сравнение материалов</h2><p class="small muted mb-0">Выбери два материала: свойства, риски и перечень проверок перед фрезерованием.</p></div></div>
+ <section class="mt-5"><div class="section-heading"><div><h2>Сравнение материалов</h2><p class="small muted mb-0">Сравни любые две марки каталога — например, сталь 40 и 40Х или Д16Т и АМг6.</p></div></div>
  <div id="mat-comparison" aria-live="polite">${matComparison()}</div></section>
  <section class="mt-5"><div class="section-heading"><div><h2>Маршрут изучения</h2><p class="small muted mb-0">${total} материалов, сгруппированных от структуры к практическому выбору.</p></div></div>
  ${guide.groups.map((g,i)=>`<div class="panel mat-section mt-3"><div class="eyebrow">Блок ${i+1} из ${guide.groups.length}</div><h3 class="mt-2">${safe(g.title)}</h3><p class="small muted">${safe(g.desc)}</p>
