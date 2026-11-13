@@ -39,7 +39,8 @@ const byCat = id => DB.categories.find(c=>c.id===id);
 let saved;
 try {saved = new Set(JSON.parse(localStorage.getItem('cnc-handbook-saved')||'[]').filter(x=>typeof x==='string'));} catch(e){saved=new Set()}
 let academyDone;try{academyDone=new Set(JSON.parse(localStorage.getItem('cnc-academy-done')||'[]').filter(x=>typeof x==='string'))}catch(_){academyDone=new Set()}
-const state = {academyDone, materialsCompare:{left:'mat-grade-steel-05',right:'mat-steel-40kh'}, gradeQuery:'',gradeGroup:'all',gradeLimit:24,materialsQuiz:{}, academyQuiz:{}, academyFields:{D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'}, saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, fanwordQuery:'', fanwordGroup:'Все группы', fanwordLimit:24, mode:'milling', expanded:new Set(), calc:{
+let practiceSaved={};try{const p=JSON.parse(localStorage.getItem('cnc-practice-v1')||'{}');if(p&&typeof p==='object'&&!Array.isArray(p))practiceSaved=p}catch(_){}
+const state = {practiceAnswers:practiceSaved,practiceGroup:'Все',practiceId:'cut-01',academyDone, materialsCompare:{left:'mat-grade-steel-05',right:'mat-steel-40kh'}, gradeQuery:'',gradeGroup:'all',gradeLimit:24,materialsQuiz:{}, academyQuiz:{}, academyFields:{D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'}, saved, category:'all', query:'', codesQuery:'', codesGroup:'Все', control:'siemens', siwordQuery:'', siwordGroup:'Все группы', siwordDoc:'all', siwordLimit:24, fanwordQuery:'', fanwordGroup:'Все группы', fanwordLimit:24, mode:'milling', expanded:new Set(), calc:{
  milling:{D:'10',Vc:'160',z:'3',fz:'0,05',ap:'5',ae:'2',L:'100'},
  drilling:{D:'6',Vc:'80',fn:'0,08',L:'40'},
  reverse:{D:'10',n:'4800',z:'4',Vf:'600'},
@@ -50,11 +51,11 @@ const state = {academyDone, materialsCompare:{left:'mat-grade-steel-05',right:'m
  thermal:{L:'200',alpha:'12',delta:'10'}
 }};
 const NAV = [
- ['home','Главная','home'],['calc','Калькулятор','calc'],['library','Справочник','book'],['category/problems','Проблемы','wrench'],['category/technology','Технология','layers'],['guide','Навигатор технолога','book'],['academy','Академия фрезерования','graduation'],['materials','Материаловедение','layers'],['codes','Стойки ЧПУ','monitor'],['siemens-words','Слова SINUMERIK','book'],['fanuc-words','Слова FANUC','book'],['category/theory','База знаний','graduation']
+ ['home','Главная','home'],['calc','Калькулятор','calc'],['library','Справочник','book'],['category/problems','Проблемы','wrench'],['category/technology','Технология','layers'],['guide','Навигатор технолога','book'],['academy','Академия фрезерования','graduation'],['practice','Практикум фрезерования','wrench'],['materials','Материаловедение','layers'],['codes','Стойки ЧПУ','monitor'],['siemens-words','Слова SINUMERIK','book'],['fanuc-words','Слова FANUC','book'],['category/theory','База знаний','graduation']
 ];
 function route(){try{let r=decodeURIComponent((location.hash||'#/home').replace(/^#\/?/,'').split('?')[0]);return r||'home'}catch(_){return 'missing'}}
 function activeNav(key,r){return key==='library' ? (r==='library'||r.startsWith('article/')||r.startsWith('category/') ) : key===r}
-function pageName(r){if(r==='home')return'Главная';if(r==='calc')return'Калькулятор режимов';if(r==='library')return'Библиотека';if(r==='guide')return'Навигатор технолога';if(r==='academy')return'Академия фрезерования';if(r==='materials')return'Материаловедение';if(r==='codes')return'Стойки ЧПУ';if(r==='siemens-words')return'Слова SINUMERIK';if(r==='fanuc-words')return'Слова FANUC';if(r==='saved')return'Избранное';if(r==='sources')return'Источники';if(r.startsWith('category/'))return byCat(r.split('/')[1])?.title||'Раздел';if(r.startsWith('article/'))return byId(r.split('/')[1])?.title||'Статья';return'Справочник'}
+function pageName(r){if(r==='home')return'Главная';if(r==='calc')return'Калькулятор режимов';if(r==='library')return'Библиотека';if(r==='guide')return'Навигатор технолога';if(r==='academy')return'Академия фрезерования';if(r==='practice')return'Практикум фрезерования';if(r==='materials')return'Материаловедение';if(r==='codes')return'Стойки ЧПУ';if(r==='siemens-words')return'Слова SINUMERIK';if(r==='fanuc-words')return'Слова FANUC';if(r==='saved')return'Избранное';if(r==='sources')return'Источники';if(r.startsWith('category/'))return byCat(r.split('/')[1])?.title||'Раздел';if(r.startsWith('article/'))return byId(r.split('/')[1])?.title||'Статья';return'Справочник'}
 function sidebar(r){return `<aside class="sidebar">
  <a class="brand" href="#/home"><div class="brand-emblem">CNC</div><div><span class="brand-title">Handbook</span><span class="brand-sub">Фрезерная обработка</span></div></a>
  <div class="side-label">Навигация</div>
@@ -64,8 +65,8 @@ function sidebar(r){return `<aside class="sidebar">
  <div class="side-bottom"><strong>Справочник · v0.3</strong><p>Без регистрации, рекламы и ИИ. Основные материалы доступны офлайн после первого открытия по HTTPS.</p></div>
  </aside>`}
 function topbar(r){return `<div class="topbar"><a class="mobile-brand" href="#/home" aria-label="Главная CNC Handbook"><span class="brand-emblem">CNC</span> Handbook</a><div><div class="topbar-title">${safe(pageName(r))}</div><div class="topbar-sub">Техническая база фрезеровщика</div></div><div class="top-actions"><a class="icon-btn" href="#/library" aria-label="Поиск по справочнику" title="Поиск">${ic('search')}</a><a class="icon-btn" href="#/saved" aria-label="Избранное" title="Избранное">${ic('bookmark')}</a></div></div>`}
-function bottomNav(r){let mobile=[['home','Главная','home'],['calc','Расчёты','calc'],['library','Поиск','search'],['codes','Стойки','monitor'],['academy','Академия','graduation']];return `<nav class="nav-bottom" aria-label="Основная навигация">${mobile.map(([id,t,i])=>`<a class="${id==='library'?(r==='library'||r.startsWith('article/')||r.startsWith('category/')?'active':''):(id===r?'active':'')}" href="${link(id)}" aria-label="${safe(t)}">${ic(i)}<span>${t}</span></a>`).join('')}</nav>`}
-function footer(){return `<footer class="footer"><span>CNC Handbook · версия 1.1.0 · 2026</span><a href="#/sources">Источники и ограничения</a></footer>`}
+function bottomNav(r){let mobile=[['home','Главная','home'],['calc','Расчёты','calc'],['library','Поиск','search'],['codes','Стойки','monitor'],['practice','Задачи','wrench']];return `<nav class="nav-bottom" aria-label="Основная навигация">${mobile.map(([id,t,i])=>`<a class="${id==='library'?(r==='library'||r.startsWith('article/')||r.startsWith('category/')?'active':''):(id===r?'active':'')}" href="${link(id)}" aria-label="${safe(t)}">${ic(i)}<span>${t}</span></a>`).join('')}</nav>`}
+function footer(){return `<footer class="footer"><span>CNC Handbook · версия 1.2.0 · 2026</span><a href="#/sources">Источники и ограничения</a></footer>`}
 function shell(r,body){return `<div class="app-shell">${sidebar(r)}<div class="page-wrap">${topbar(r)}<main class="main" id="main-content">${body}${footer()}</main></div>${bottomNav(r)}</div>`}
 function crumb(links){return `<div class="breadcrumb">${links.map(([t,r],i)=>`${i?ic('chevron'):''}${r?`<a href="${link(r)}">${safe(t)}</a>`:`<span>${safe(t)}</span>`}`).join('')}</div>`}
 function header(title,desc,sub=''){return `<div class="page-intro">${sub?`<div class="eyebrow mb-3">${safe(sub)}</div>`:''}<h1>${safe(title)}</h1><p>${safe(desc)}</p></div>`}
@@ -75,7 +76,7 @@ function articleGrid(arr){return arr.length?`<div class="article-grid">${arr.map
 function empty(title,desc){return `<div class="empty">${ic('search')}<h3>${safe(title)}</h3><p>${safe(desc)}</p></div>`}
 function callout(text,warn=false){return `<div class="callout ${warn?'alert':''}">${ic(warn?'warning':'info')}<div>${text}</div></div>`}
 function heroMark(){return `<svg viewBox="0 0 260 240" aria-hidden="true"><defs><linearGradient id="steel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#7bafed" stop-opacity=".7"/><stop offset="1" stop-color="#236fbc" stop-opacity=".2"/></linearGradient></defs><path d="M35 155 122 203l103-50-93-47z" fill="none" stroke="#79b8fa" stroke-width="2"/><path d="M35 155V96l90-48 100 45v60" fill="none" stroke="#4383c0" stroke-width="1.8"/><path d="M125 48v57M225 93l-100 56-90-53" stroke="#5ba2e6" fill="none" stroke-width="1.6"/><path d="m70 125 53-28 61 30-53 27z" fill="url(#steel)" stroke="#7ebcf2"/><path d="m70 125v22l61 30v-23m53-27v20l-53 30" fill="none" stroke="#7ebcf2"/><path d="M105 67v52m-8-51h16M97 58h16l5 9H92z" stroke="#b8d8f9" stroke-width="2" fill="#2a6baf"/><path d="m105 119 4 4-4 4-4-4z" fill="#5ecbd3"/><path d="M105 26v20m-4-5 4 5 4-5M105 120h-25" stroke="#77c8ff" stroke-dasharray="4 5"/><path d="M35 155 10 170M35 155v-28" stroke="#72b8ec" stroke-width="1.4"/><path d="m10 170 9-1-4-7" stroke="#72b8ec" fill="none"/><path d="M225 153h18" stroke="#72b8ec" stroke-width="1.5"/><circle cx="125" cy="149" r="3" fill="#8dddfa"/></svg>`}
-function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v1.1.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/academy">${ic('graduation')} Академия фрезерования</a><a class="btn btn-dark-outline" href="#/materials">${ic('layers')} Материаловедение</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
+function home(){let priority=['drawing-tech','rough-finish-sequence','corner-overload','cam-risk-review'];return `<section class="hero"><div class="hero-copy"><div class="eyebrow">Справочник фрезерной обработки / v1.2.0</div><h1>Всё важное —<br>под рукой у станка.</h1><p>Режимы, технология, типовые проблемы и команды стоек. Коротко для работы, подробно для понимания.</p><div class="hero-actions"><a class="btn btn-hero" href="#/calc">${ic('calc')} Рассчитать режимы</a><a class="btn btn-dark-outline" href="#/academy">${ic('graduation')} Академия фрезерования</a><a class="btn btn-dark-outline" href="#/practice">${ic('wrench')} 30 инженерных задач</a><a class="btn btn-dark-outline" href="#/materials">${ic('layers')} Материаловедение</a><a class="btn btn-dark-outline" href="#/guide">${ic('layers')} Навигатор технолога</a><a class="btn btn-dark-outline" href="#/library">${ic('search')} Найти тему</a></div></div><div class="hero-mark">${heroMark()}</div></section>
  <div class="mt-3 stats"><span>${DB.articles.length} проверяемых тем</span><span class="dot"></span><span>3 группы стоек</span><span class="dot"></span><span>Без ИИ</span></div>
  <section class="mt-5"><div class="section-heading"><div><h2>Рабочие разделы</h2><p class="small muted mb-0">Нужная информация — в два касания</p></div></div><div class="feature-grid">
  ${feature('calc','Калькуляторы','Обороты, подача, съём, время','calc')}
@@ -87,6 +88,7 @@ function home(){let priority=['drawing-tech','rough-finish-sequence','corner-ove
  ${feature('fanuc-words','Язык FANUC',DB.fanucWords.length+' макрокоманд и слов','book')}
  ${feature('category/theory','База знаний','Причины и физика процессов','graduation')}
  ${feature('academy','Академия фрезерования','10 уроков и живой разбор ap / ae','graduation')}
+ ${feature('practice','Практикум фрезерования','30 ситуаций: ap / ae, вибрации, износ','wrench')}
  ${feature('materials','Материаловедение','18 углублённых тем и сравнение марок','layers')}
  ${feature('guide','Маршруты технолога','Подборки тем по реальным задачам','layers')}
  </div></section>
@@ -355,6 +357,55 @@ function materialsPage(){
  <a href="https://www.sandvik.coromant.cn/zh-cn/knowledge/materials/workpiece-materials" target="_blank" rel="noopener noreferrer">Sandvik — материалы и ISO-группы</a>
  <a href="https://bssa.org.uk/bssa_articles/general-principles-of-machining-stainless-steels/" target="_blank" rel="noopener noreferrer">BSSA — обработка нержавеющих сталей</a></div></div></section>
  `;}
+
+function practiceCases(){
+ const d=DB.practiceCases||[];return state.practiceGroup==='Все'?d:d.filter(c=>c.group===state.practiceGroup);
+}
+function practiceMath(c){
+ if(!c.calc)return '';
+ const m=c.calc;const numeric=['D','n','z','fz','ap','ae'].map(k=>Number(m[k]));if(numeric.some(v=>!Number.isFinite(v)||v<=0)||m.ae>m.D)return '<p class="small muted">Модель расчёта недоступна: требуется проверить исходные данные.</p>';
+ const r=m.ae/m.D;const angle=Math.acos(Math.max(-1,Math.min(1,1-2*r)))*180/Math.PI;
+ const factor=r<.5?2*Math.sqrt(r*(1-r)):1;
+ const vf=m.n*m.z*m.fz,q=m.ap*m.ae*vf/1000,hmax=m.fz*factor;
+ return `<section class="prac-numbers"><div class="eyebrow">Геометрическая проверка модели</div><div class="prac-num-grid">
+ <div><span>Vf</span><strong>${pretty(vf,2)}</strong><small>мм/мин</small></div><div><span>Q</span><strong>${pretty(q,3)}</strong><small>см³/мин</small></div>
+ <div><span>hmax*</span><strong>${pretty(hmax,4)}</strong><small>мм</small></div><div><span>Угол контакта*</span><strong>${pretty(angle,2)}°</strong><small>при постоянном ae</small></div></div>
+ <p class="small muted mb-0">*Только идеализированная концевая фреза с кромкой ≈90° при прямолинейном боковом контакте. При ae/D&gt;0,5 hmax=fz; при меньшем контакте hmax=fz×2√(r(1−r)), где r=ae/D. Не учитывает биение, винтовую линию, вход, CAM-углы, материал и реальную допустимость режимов.</p></section>`;
+}
+function practiceDetail(c){
+ if(!c)return '<div class="panel">В выбранной группе нет задач.</div>';
+ const cases=practiceCases(),idx=cases.findIndex(x=>x.id===c.id),done=state.practiceAnswers[c.id],answered=Number.isInteger(done)&&done>=0&&done<c.options.length,correct=done===c.answer,answeredCount=Object.keys(state.practiceAnswers).filter(id=>DB.practiceCases.some(p=>p.id===id)).length;
+ const refs=Array.isArray(c.sourceKeys)?c.sourceKeys:[];
+ return `<div class="prac-shell"><div class="prac-head"><div><div class="eyebrow">${safe(c.group)} · ${safe(c.level)}</div><h2>${safe(c.title)}</h2></div><span class="prac-counter">${idx+1} / ${cases.length}</span></div>
+ <div class="prac-context"><span class="prac-context-title">Материал</span><p>${safe(c.material)}</p><span class="prac-context-title">Условия</span><p>${safe(c.setup)}</p></div>
+ <h3 class="prac-question">${safe(c.question)}</h3>
+ <div class="prac-options">${c.options.map((op,i)=>`<button type="button" class="prac-option ${answered&&i===c.answer?'is-correct':''} ${answered&&done===i&&done!==c.answer?'is-wrong':''}" data-action="practice-answer" data-id="${safe(c.id)}" data-opt="${i}" aria-pressed="${answered&&done===i}" ${answered?'disabled':''}><span class="prac-option-letter">${String.fromCharCode(65+i)}</span><span>${safe(op.label)}</span></button>`).join('')}</div>
+ ${answered?`<section class="prac-feedback" aria-live="polite"><div class="prac-feedback-title">${correct?'Решение обосновано':'Ситуацию стоит пересмотреть'} · вариант ${String.fromCharCode(65+c.answer)}</div><p>${safe(c.reason)}</p>
+ <div class="prac-errors"><h4>Разбор всех вариантов</h4>${c.options.map((op,i)=>`<p><strong>${String.fromCharCode(65+i)}.</strong> ${safe(op.feedback)}</p>`).join('')}</div>
+ ${practiceMath(c)}
+ <div class="prac-checks"><h4>Что ещё нужно проверить на станке</h4><ul>${c.checks.map(x=>`<li>${safe(x)}</li>`).join('')}</ul></div>
+ <div class="prac-references"><h4>Обоснование по производителям</h4><p class="small muted">Рекомендации производителей приведены как подтверждение принципов. Сам кейс и варианты решения — учебная технологическая интерпретация, а не инструкция к запуску.</p>
+ ${refs.map(k=>{const s=DB.practiceSources[k];return s?`<a href="${safe(s.url)}" target="_blank" rel="noopener noreferrer">${safe(s.name)}</a>`:''}).join('')}</div>
+ <button class="btn btn-quiet btn-sm" type="button" data-action="practice-retry" data-id="${safe(c.id)}">Повторить задачу</button></section>`:
+ `<div class="prac-prompt"><strong>Как поступишь первым?</strong><p>Выбери наиболее обоснованное решение. После ответа появится полный разбор правильного и ошибочных вариантов, а также расчёт и ссылки на производителей.</p></div>`}
+ <div class="prac-nav"><button type="button" class="btn btn-quiet" data-action="practice-prev" ${idx<=0?'disabled':''}>← Предыдущая</button>
+ <span class="small muted">${answeredCount} / ${DB.practiceCases.length} рассмотрено</span>
+ <button type="button" class="btn btn-primary" data-action="practice-next" ${idx>=cases.length-1?'disabled':''}>Следующая →</button></div></div>`;
+}
+function practicePage(){
+ const all=DB.practiceCases||[],cs=practiceCases();let current=cs.find(x=>x.id===state.practiceId)||cs[0];
+ const solved=all.filter(c=>Number.isInteger(state.practiceAnswers[c.id])).length;
+ const correct=all.filter(c=>state.practiceAnswers[c.id]===c.answer).length;
+ const groups=['Все','Контакт ap/ae','Вибрации','Износ и сколы'];
+ return `${header('Практикум фрезерования','30 производственных ситуаций уровня опытного оператора: глубина и ширина резания, чаттер, выкрашивание и износ.','CNC HANDBOOK · ИНЖЕНЕРНЫЕ РЕШЕНИЯ')}
+ <div class="prac-intro"><div class="prac-summary"><div><strong>${solved} / ${all.length}</strong><span>разобрано</span></div><div><strong>${correct}</strong><span>верных с первой или последней попытки*</span></div></div>
+ <div class="acad-progress-track"><div style="width:${all.length?solved/all.length*100:0}%"></div></div><p>*Сохраняется последний выбранный вариант на этом устройстве; это самостоятельная тренировка, не допуск к работе.</p></div>
+ <div class="prac-filters" role="group" aria-label="Выбрать тему">${groups.map(g=>`<button type="button" class="prac-filter ${g===state.practiceGroup?'active':''}" data-action="practice-group" data-group="${safe(g)}" aria-pressed="${g===state.practiceGroup}">${safe(g)} · ${g==='Все'?all.length:all.filter(c=>c.group===g).length}</button>`).join('')}</div>
+ <div class="prac-jump"><label for="prac-task-select">Перейти к задаче</label><select id="prac-task-select">${cs.map((c,i)=>`<option value="${safe(c.id)}" ${c.id===current?.id?'selected':''}>${i+1}. ${safe(c.title)} ${Number.isInteger(state.practiceAnswers[c.id])?'✓':''}</option>`).join('')}</select></div>
+ <div id="practice-detail" aria-live="polite">${practiceDetail(current)}</div>
+ <div class="panel mt-4"><h3>Как работать с заданиями</h3><p>В каждом сценарии исходных данных намеренно недостаточно для прямого назначения реальных S/F и ap/ae. Выбирай <strong>первое инженерно обоснованное действие</strong>. После выбора разбираются все варианты и производственные ограничения.</p>
+ <p class="small muted mb-0">Модели Vf, Q и hmax справедливы только в указанных геометрических условиях. Для реального запуска нужны актуальная документация производителя инструмента, условия станка, проверенная NC-программа и технологический регламент.</p></div>`;
+}
 function missing(){return `${header('Раздел не найден','Такой страницы пока нет.')}<a class="btn btn-primary" href="#/home">На главную</a>`}
 const cfg={
  milling:{label:'Фрезерование',fields:[['D','Диаметр фрезы D','мм'],['Vc','Скорость резания Vc','м/мин'],['z','Рабочих зубьев z','шт'],['fz','Подача на зуб fz','мм/зуб'],['ap','Глубина резания ap','мм'],['ae','Ширина резания ae','мм'],['L','Длина резания L','мм']]},
@@ -417,7 +468,7 @@ function calcPage(){const m=state.mode;let calc=calculator(m,state.calc[m]);retu
  <div class="mt-4">${callout('<strong>Ограничение:</strong> это калькулятор, а не подбор рекомендованных режимов. Проверь максимальные обороты шпинделя и инструмента, подачу станка, материал и жёсткость.',true)}</div>
  <section class="mt-5"><div class="section-heading"><h2>Разобраться в расчётах</h2></div><div class="related-links"><a href="#/article/cutting">Обороты и минутная подача</a><a href="#/article/drilling">Сверление</a><a href="#/article/chip">Толщина стружки</a><a href="#/article/scallop-formula">Гребешок на 3D-поверхности</a><a href="#/article/measurement-temperature">Температура и размер</a><a href="${safe(DB.sources.sandvik.url)}" rel="noopener noreferrer" target="_blank">Источник формул ${ic('external','xs')}</a></div></section>`}
 function render(keepScroll=false){let current=route(),body;
- if(current==='home')body=home();else if(current==='guide')body=guidePage();else if(current==='academy')body=academyPage();else if(current==='materials')body=materialsPage();else if(current==='calc')body=calcPage();else if(current==='library')body=library();else if(current==='codes')body=codesPage();else if(current==='siemens-words')body=siemensWordsPage();else if(current==='fanuc-words')body=fanucWordsPage();else if(current==='saved')body=savedPage();else if(current==='sources')body=sourcesPage();else if(current.startsWith('category/'))body=categoryPage(current.split('/')[1]);else if(current.startsWith('article/'))body=articlePage(current.split('/')[1]);else body=missing();
+ if(current==='home')body=home();else if(current==='guide')body=guidePage();else if(current==='academy')body=academyPage();else if(current==='practice')body=practicePage();else if(current==='materials')body=materialsPage();else if(current==='calc')body=calcPage();else if(current==='library')body=library();else if(current==='codes')body=codesPage();else if(current==='siemens-words')body=siemensWordsPage();else if(current==='fanuc-words')body=fanucWordsPage();else if(current==='saved')body=savedPage();else if(current==='sources')body=sourcesPage();else if(current.startsWith('category/'))body=categoryPage(current.split('/')[1]);else if(current.startsWith('article/'))body=articlePage(current.split('/')[1]);else body=missing();
  let y=window.scrollY;qs('#app').innerHTML=shell(current,body);if(keepScroll)window.scrollTo({top:y,behavior:'instant'});
 }
 const defaultCalc=JSON.parse(JSON.stringify(state.calc));
@@ -429,6 +480,10 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
  if(ac==='category-filter'){state.category=el.dataset.cat;render(true)}
  if(ac==='expand'){let id=el.dataset.id;state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id);render(true)}
  if(ac==='control'){state.control=el.dataset.control;state.codesQuery='';state.codesGroup='Все';render(true)}
+ if(ac==='practice-answer'){const id=el.dataset.id,choice=Number(el.dataset.opt);const c=DB.practiceCases.find(p=>p.id===id);if(!c||!Number.isInteger(choice)||choice<0||choice>=c.options.length||Number.isInteger(state.practiceAnswers[id]))return;state.practiceAnswers[id]=choice;try{localStorage.setItem('cnc-practice-v1',JSON.stringify(state.practiceAnswers))}catch(_){}render(true)}
+ if(ac==='practice-retry'){delete state.practiceAnswers[el.dataset.id];try{localStorage.setItem('cnc-practice-v1',JSON.stringify(state.practiceAnswers))}catch(_){}render(true)}
+ if(ac==='practice-group'){state.practiceGroup=el.dataset.group;state.practiceId=practiceCases()[0]?.id||'cut-01';render()}
+ if(ac==='practice-prev'||ac==='practice-next'){const list=practiceCases(),idx=list.findIndex(c=>c.id===state.practiceId);const to=list[idx+(ac==='practice-next'?1:-1)];if(to){state.practiceId=to.id;render();window.scrollTo({top:0,behavior:'instant'})}}
  if(ac==='academy-reset'){state.academyFields={D:'10',n:'4800',z:'4',fz:'0,05',apA:'20',aeA:'1',apB:'5',aeB:'10'};render(true)}
  if(ac==='grade-more'){state.gradeLimit+=24;const node=qs('#grade-results');if(node)node.innerHTML=gradeResults()}
  if(ac==='grade-group'){state.gradeGroup=el.dataset.group;state.gradeLimit=24;const box=qs('.grade-filter-bar');if(box)box.querySelectorAll('button').forEach(btn=>{btn.classList.toggle('active',btn.dataset.group===state.gradeGroup);btn.setAttribute('aria-pressed',String(btn.dataset.group===state.gradeGroup))});const node=qs('#grade-results');if(node)node.innerHTML=gradeResults()}
@@ -441,7 +496,7 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-action]')
  if(ac==='calc-mode'){state.mode=el.dataset.mode;render(true)}
  if(ac==='calc-example'){state.calc[state.mode]={...defaultCalc[state.mode]};render(true);toast('Пример восстановлен')}
 });
-document.addEventListener('change',e=>{if(e.target.dataset.matCompare){state.materialsCompare[e.target.dataset.matCompare]=e.target.value;const node=qs('#mat-comparison');if(node)node.innerHTML=matComparison()}else if(e.target.id==='fanword-group'){state.fanwordGroup=e.target.value;state.fanwordLimit=24;const node=qs('#fanword-results');if(node)node.innerHTML=fanwordResults()}else if(e.target.id==='siword-group'){state.siwordGroup=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}else if(e.target.id==='siword-doc'){state.siwordDoc=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}});
+document.addEventListener('change',e=>{if(e.target.id==='prac-task-select'){state.practiceId=e.target.value;render();window.scrollTo({top:0,behavior:'instant'})}else if(e.target.dataset.matCompare){state.materialsCompare[e.target.dataset.matCompare]=e.target.value;const node=qs('#mat-comparison');if(node)node.innerHTML=matComparison()}else if(e.target.id==='fanword-group'){state.fanwordGroup=e.target.value;state.fanwordLimit=24;const node=qs('#fanword-results');if(node)node.innerHTML=fanwordResults()}else if(e.target.id==='siword-group'){state.siwordGroup=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}else if(e.target.id==='siword-doc'){state.siwordDoc=e.target.value;state.siwordLimit=24;const node=qs('#siword-results');if(node)node.innerHTML=siwordResults()}});
 document.addEventListener('input',e=>{
  if(e.target.dataset.acadField){state.academyFields[e.target.dataset.acadField]=e.target.value;const node=qs('#academy-results');if(node)node.innerHTML=academyResults()}
  else if(e.target.id==='grade-search'){state.gradeQuery=e.target.value;state.gradeLimit=24;const node=qs('#grade-results');if(node)node.innerHTML=gradeResults()}
